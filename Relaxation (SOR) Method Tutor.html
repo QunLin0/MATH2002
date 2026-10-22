@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relaxation (SOR) Method Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&display=swap" rel="stylesheet">
+<script>window.mjOK=false;window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'},startup:{pageReady:()=>MathJax.startup.defaultPageReady().then(()=>{window.mjOK=true})}};</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+<style>
+:root{--bg:#f7f9fc;--grid:#e3e9f3;--ink:#1b2742;--mute:#5a6785;--card:#ffffff;--line:#cfd8e8;--accent:#0b7f86;--accent-ink:#ffffff;--ok:#1b7d45;--okbg:#e2f4e9;--bad:#b3411b;--badbg:#fbe9e1;--warn:#8a5a00;--warnbg:#fdf1d4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a2c;--grid:#1c2740;--ink:#e8edf8;--mute:#9aa8c7;--card:#192238;--line:#2f3d5e;--accent:#4fc7cd;--accent-ink:#06282b;--ok:#6fd49a;--okbg:#17382a;--bad:#ff9a74;--badbg:#3b2219;--warn:#f0c15a;--warnbg:#3a2f10}}
+:root[data-theme="dark"]{--bg:#121a2c;--grid:#1c2740;--ink:#e8edf8;--mute:#9aa8c7;--card:#192238;--line:#2f3d5e;--accent:#4fc7cd;--accent-ink:#06282b;--ok:#6fd49a;--okbg:#17382a;--bad:#ff9a74;--badbg:#3b2219;--warn:#f0c15a;--warnbg:#3a2f10}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+h1{font:800 clamp(30px,6vw,44px)/1.05 "Bricolage Grotesque",system-ui,sans-serif;margin:0 0 6px;letter-spacing:-.02em}
+h2{font:600 21px/1.2 "Bricolage Grotesque",system-ui,sans-serif;margin:0 0 10px}
+.sub{color:var(--mute);margin:0 0 22px;max-width:60ch}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:18px;margin:0 0 16px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--ink)}
+button{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;min-height:44px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+button:disabled{opacity:.45;cursor:default}
+.tabs{display:flex;gap:6px;margin:0 0 16px}
+.tabs button{flex:1;font-weight:700}
+.tabs button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+select{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-height:44px;max-width:100%}
+.eq{font-size:19px;line-height:1.9}
+.chip{display:inline-block;border-radius:999px;padding:2px 12px;font-size:15px;font-weight:700;margin:2px 4px 2px 0}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.bad{background:var(--badbg);color:var(--bad)}
+.note{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 14px;margin:10px 0}
+.step{border-left:4px solid var(--accent);padding:2px 0 2px 14px;margin:10px 0}
+.step b{display:block}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:340px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+tr.cur td{background:var(--okbg)}
+.in{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.in label{display:flex;align-items:center;gap:8px;font-size:19px}
+.in input{width:112px;border:2px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);min-height:44px}
+.in input.ok{border-color:var(--ok);background:var(--okbg)}.in input.bad{border-color:var(--bad);background:var(--badbg)}
+.msg{min-height:28px;font-weight:700;margin:6px 0}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+.hint{background:var(--bg);border:1.5px dashed var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}
+.sc{color:var(--mute);margin-left:auto}
+.tips{border:1.5px solid var(--line);border-radius:10px;margin:12px 0 0;padding:0 14px;background:var(--bg)}
+.tips summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:44px}
+.tips table{min-width:0;margin:0 0 8px}
+.tips th,.tips td{text-align:left;padding:5px 8px 5px 0;vertical-align:top}
+.tips ul{margin:6px 0 12px;padding-left:20px}
+.tips code{font-family:inherit;font-weight:700;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:0 6px}
+.tips .no{color:var(--bad)}
+.rq{display:inline-flex;gap:6px;align-items:center;margin:0 16px 10px 0}
+#rres div{margin:4px 0}
+[hidden]{display:none!important}
+mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+mjx-container[display="true"]{text-align:left!important;margin:.3em 0!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Relaxation method tutor</h1>
+<p class="sub">Work through a system one successive over-relaxation (SOR) iteration at a time and get instant feedback on each answer.</p>
+
+<div class="card row">
+  <label for="prob"><b>Problem</b></label>
+  <select id="prob"></select>
+  <button id="reset">Start over</button>
+</div>
+
+<section class="card">
+  <h2>The system</h2>
+  <div class="eq" id="sys"></div>
+  <h2 style="margin-top:16px">Update formulas</h2>
+  <div class="eq" id="forms"></div>
+  <p id="omega" style="margin:6px 0 0"></p>
+</section>
+
+<section id="v-prac">
+  <div class="card">
+    <h2 id="ph"></h2>
+    <p style="margin:0">Work from the top equation down. For each unknown, first find the Gauss-Seidel value (using new values as soon as you have them), then blend it with the old value using ω. Enter a whole number, a fraction like 7/3, or a decimal.</p>
+    <details class="tips" open>
+      <summary>How to enter your answer</summary>
+      <div class="scroll"><table>
+        <tr><th>Type this</th><th>For</th></tr>
+        <tr><td><code>3</code> or <code>-2</code></td><td>Whole numbers. Use the minus key for negatives.</td></tr>
+        <tr><td><code>7/3</code> or <code>-5/2</code></td><td>Fractions: top number, a slash, then the bottom number.</td></tr>
+        <tr><td><code>2.33333</code> or <code>0.5</code></td><td>Decimals, with a period as the decimal point.</td></tr>
+      </table></div>
+      <ul>
+        <li>Write a mixed number as one fraction: type <code>3/2</code>, not <span class="no">1 1/2</span>.</li>
+        <li>Don’t use brackets, units, or words. Spaces around the slash are fine.</li>
+        <li>The bottom number can’t be 0.</li>
+        <li>A fraction must be exactly right. A decimal is accepted if it’s within 0.00001 of the answer, so <code>2.33333</code> works for 7/3 but <code>2.33</code> does not.</li>
+        <li>You don’t need to simplify, but <code>14/6</code> and <code>7/3</code> both count as correct.</li>
+      </ul>
+    </details>
+    <div class="in" id="inputs"></div>
+    <div class="row">
+      <button id="check" class="primary">Check my answers</button>
+      <button id="hintb">Show a hint</button>
+      <button id="show">Show the answer</button>
+      <span class="sc" id="score"></span>
+    </div>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    <div class="hint" id="hint" hidden></div>
+  </div>
+</section>
+
+<section class="card" id="v-conv">
+  <h2>Will SOR converge?</h2>
+  <p style="margin:0 0 8px"><b>Step 1.</b> In each row, compare the size of the diagonal entry with the sum of the sizes of the other entries in that row.</p>
+  <div id="rowq"></div>
+  <div class="row"><button id="crow">Check the rows</button></div>
+  <div id="rres" role="status" aria-live="polite"></div>
+  <p style="margin:14px 0 8px"><b>Step 2.</b> Decide what you expect, taking the relaxation factor ω into account. You can run iterations above and watch the largest error in the table below.</p>
+  <div class="row"><button id="cyes">It converges</button><button id="cno">It diverges</button></div>
+  <div class="msg" id="cmsg" role="status" aria-live="polite"></div>
+  <div class="hint" id="cexp" hidden></div>
+</section>
+
+<section class="card">
+  <h2>Iterates so far</h2>
+  <div class="scroll"><table id="tbl"></table></div>
+  <p class="sub" style="margin:10px 0 0" id="conv"></p>
+  <p class="sub" style="margin:0;font-size:15px">Values are kept as exact fractions. Fractions with very large numerators or denominators are shown as decimals.</p>
+</section>
+</main>
+
+<script>
+const V=['x','y','z'];
+const gcd=(a,b)=>{a=a<0n?-a:a;b=b<0n?-b:b;while(b)[a,b]=[b,a%b];return a};
+const Q=(n,d=1n)=>{n=BigInt(n);d=BigInt(d);if(d<0n){n=-n;d=-d}const g=gcd(n,d)||1n;return[n/g,d/g]};
+const add=(p,q)=>Q(p[0]*q[1]+q[0]*p[1],p[1]*q[1]),sub=(p,q)=>Q(p[0]*q[1]-q[0]*p[1],p[1]*q[1]);
+const mul=(p,q)=>Q(p[0]*q[0],p[1]*q[1]),div=(p,q)=>Q(p[0]*q[1],p[1]*q[0]);
+const same=(p,q)=>p[0]===q[0]&&p[1]===q[1],neg=p=>p[0]<0n,abs=p=>[p[0]<0n?-p[0]:p[0],p[1]];
+const isOne=p=>p[0]===1n&&p[1]===1n,isZero=p=>p[0]===0n,num=p=>Number(p[0])/Number(p[1]);
+const um=s=>s.replace('-','\u2212');
+function parse(s){
+  s=String(s).trim().replace(/\u2212/g,'-').replace(',','.');
+  let m=s.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+  if(m)return BigInt(m[2])===0n?null:Q(m[1],m[2]);
+  m=s.match(/^(-?)(\d*)\.?(\d*)$/);
+  if(m&&(m[2]||m[3])){const fr=m[3]||'';const n=BigInt((m[2]||'0')+fr);return Q(m[1]?-n:n,10n**BigInt(fr.length))}
+  return null;
+}
+const dec=p=>{const v=num(p);return isFinite(v)?String(Math.round(v*1e5)/1e5):'\u221e'};
+const LIM=10n**6n;
+const big=p=>p[1]>LIM||abs(p)[0]>LIM*LIM;
+const fr=p=>big(p)?um(dec(p)):um(p[1]===1n?String(p[0]):p[0]+'/'+p[1]);
+const pt=p=>(big(p)||p[1]===1n)?fr(p):fr(p)+' \u2248 '+um(dec(p));
+function tx(p){if(big(p))return dec(p);if(p[1]===1n)return String(p[0]);return(p[0]<0n?'-':'')+'\\frac{'+abs(p)[0]+'}{'+p[1]+'}'}
+
+const P=[
+ {n:"Three unknowns: example 1",A:[["10","-1","2"],["-1","11","-1"],["2","-1","10"]],b:["6","22","-10"],w:"6/5",conv:true,rho:0.22},
+ {n:"Three unknowns: example 2",A:[["8","1","-2"],["2","9","1"],["-1","2","7"]],b:["3","-5","11"],w:"9/10",conv:true,rho:0.27},
+ {n:"Three unknowns: example 3",A:[["1","2","3"],["2","1","2"],["3","2","1"]],b:["6","5","6"],w:"4/5",conv:false,rho:2.9},
+ {n:"Three unknowns: example 4",A:[["4","-1","0"],["-1","4","-1"],["0","-1","4"]],b:["2","4","10"],w:"21/10",conv:false,rho:1.1},
+ {n:"Three unknowns: example 5",A:[["2","-1","0"],["-1","2","-1"],["0","-1","2"]],b:["0","0","4"],w:"6/5",conv:true,rho:0.2},
+ {n:"Three unknowns: example 6",A:[["2","3","1"],["3","2","1"],["1","1","2"]],b:["7","6","1"],w:"1/2",conv:false,rho:1.38}
+];
+let W,cur=0,A,b,hist,k,view='learn',score=0,tries=0,solved=false,wrongs=0;
+const $=id=>document.getElementById(id);
+
+function rowVal(i,x){let s=b[i];A[i].forEach((a,j)=>{if(j!==i)s=sub(s,mul(a,x[j]))});return div(s,A[i][i])}
+function stepOnce(prev){const x=prev.slice();A.forEach((_,i)=>{x[i]=add(mul(sub(Q(1),W),x[i]),mul(W,rowVal(i,x)))});return x}
+function subst(i,x,lhs){
+  let t=tx(b[i]);
+  A[i].forEach((a,j)=>{if(j!==i&&!isZero(a))t+=' - \\left('+tx(a)+'\\right)\\left('+tx(x[j])+'\\right)'});
+  return (lhs||V[i])+'=\\frac{'+t+'}{'+tx(A[i][i])+'}';
+}
+function texEq(i){let s='';A[i].forEach((c,j)=>{if(isZero(c))return;const m=isOne(abs(c))?'':tx(abs(c));s+=(s===''?(neg(c)?'-':''):(neg(c)?' - ':' + '))+m+V[j]});return s+'&='+tx(b[i])}
+function renderConv(){
+  const c=$('rowq');c.innerHTML='';
+  A.forEach((_,i)=>{
+    const l=document.createElement('label');l.className='rq';l.append('Row '+(i+1)+':');
+    const sel=document.createElement('select');sel.id='rs'+i;
+    ['Choose\u2026','Dominant','Not dominant'].forEach((t,v)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)});
+    l.appendChild(sel);c.appendChild(l);
+  });
+  $('rres').innerHTML='';$('cmsg').textContent='';$('cmsg').className='msg';$('cexp').hidden=true;
+}
+$('crow').onclick=()=>{
+  const d=domRows(),out=$('rres');out.innerHTML='';
+  if(A.some((_,i)=>+$('rs'+i).value===0)){out.textContent='Choose an answer for every row first.';return}
+  A.forEach((row,i)=>{
+    const dg=Math.abs(num(row[i])),others=row.map((a,j)=>j===i?null:Math.abs(num(a))).filter(v=>v!==null);
+    const total=others.reduce((x,y)=>x+y,0),ok=(+$('rs'+i).value===1)===d[i];
+    const line=document.createElement('div');
+    line.textContent=ok?'\u2713 Row '+(i+1)+': '+dg+' vs '+others.join(' + ')+' = '+total+', so '+(d[i]?'dominant.':'not dominant.'):'\u2717 Row '+(i+1)+': compare '+dg+' with '+others.join(' + ')+'. Try again.';
+    line.style.color=ok?'var(--ok)':'var(--bad)';out.appendChild(line);
+  });
+};
+function verdict(g){
+  const e=P[cur],all=domRows().every(Boolean),m=$('cmsg'),x=$('cexp');
+  m.className='msg '+(g===e.conv?'ok':'bad');m.textContent=g===e.conv?'Correct.':'Not quite.';
+  let t;const wv=num(W),r='The spectral radius of the SOR iteration matrix is about '+e.rho+(e.conv?', which is below 1, so it converges.':', which is above 1, so the errors grow and it diverges.');
+  if(wv<=0||wv>=2)t='The relaxation factor '+fr(W)+' is outside the range 0 < \u03c9 < 2, which is necessary for SOR to converge. '+r;
+  else if(all&&wv<=1)t='Every row is strictly diagonally dominant and \u03c9 \u2264 1, so SOR is guaranteed to converge. '+r;
+  else if(all)t='Every row is dominant, but dominance only guarantees convergence when \u03c9 \u2264 1, so it does not settle this case. '+r;
+  else t='The dominance test fails here, so it is inconclusive. '+r;
+  x.textContent=t;x.hidden=false;
+}
+$('cyes').onclick=()=>verdict(true);
+$('cno').onclick=()=>verdict(false);
+function typeset(){if(window.mjOK&&window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([document.querySelector('main')]).catch(()=>{})}
+function exact(){
+  const n=A.length,M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){let p=c;while(p<n&&isZero(M[p][c]))p++;if(p===n)return null;[M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<n;r++)if(r!==c){const q=div(M[r][c],M[c][c]);for(let j=c;j<=n;j++)M[r][j]=sub(M[r][j],mul(q,M[c][j]))}}
+  return M.map((r,i)=>div(r[n],r[i]));
+}
+function load(i){
+  A=P[i].A.map(r=>r.map(parse));b=P[i].b.map(parse);W=parse(P[i].w);hist=[A.map(()=>Q(0))];k=0;score=0;tries=0;solved=false;wrongs=0;
+  cur=i;renderConv();render();
+}
+function domRows(){return A.map((r,i)=>Math.abs(num(r[i]))>r.reduce((s,a,j)=>j===i?s:s+Math.abs(num(a)),0))}
+function render(){
+  $('sys').innerHTML='\\[\\begin{aligned}'+A.map((_,i)=>texEq(i)).join('\\\\')+'\\end{aligned}\\]';
+  $('forms').innerHTML='\\[\\begin{aligned}'+A.map((row,i)=>{
+    const others=row.map((a,j)=>j!==i&&!isZero(a)?(neg(a)?' + ':' - ')+(isOne(abs(a))?'':tx(abs(a)))+V[j]+(j<i?'^{(k+1)}':'^{(k)}'):'').join('');
+    return V[i]+'^{(k+1)}&=(1-\\omega)'+V[i]+'^{(k)}+\\omega\\cdot\\frac{'+tx(b[i])+others+'}{'+tx(row[i])+'}';
+  }).join('\\\\')+'\\end{aligned}\\]';
+  $('omega').innerHTML='where \\(\\omega='+tx(W)+'\\) (= '+dec(W)+') is the relaxation factor for this example.';
+  while(hist.length<k+1)hist.push(stepOnce(hist[hist.length-1]));
+  renderPrac();renderTable();typeset();
+}
+function renderPrac(){
+  $('ph').textContent='Your turn: find iteration '+(k+1);
+  const c=$('inputs');c.innerHTML='';
+  A.forEach((_,i)=>{
+    const l=document.createElement('label');l.textContent=V[i]+' =';
+    const inp=document.createElement('input');inp.type='text';inp.inputMode='text';inp.autocomplete='off';inp.id='in'+i;inp.setAttribute('aria-label','Value of '+V[i]+' at iteration '+(k+1));
+    l.appendChild(inp);c.appendChild(l);
+  });
+  $('msg').textContent='';$('msg').className='msg';$('hint').hidden=true;solved=false;
+  $('check').textContent='Check my answers';
+  $('score').textContent=tries?'Correct first try: '+score+' of '+tries:'';
+}
+function renderTable(){
+  const ex=exact();
+  const err=x=>Math.max(...x.map((v,i)=>Math.abs(num(v)-num(ex[i]))));
+  const es=e=>!isFinite(e)?'\u2014':(e>1e9?e.toExponential(1):um(String(Math.round(e*1e4)/1e4)));
+  let h='<tr><th>k</th>'+A.map((_,i)=>'<th>'+V[i]+'</th>').join('')+'<th>Largest error</th></tr>';
+  hist.slice(0,k+1).forEach((x,i)=>{h+='<tr'+(i===k?' class="cur"':'')+'><td>'+i+'</td>'+x.map(v=>'<td>'+pt(v)+'</td>').join('')+'<td>'+es(err(x))+'</td></tr>'});
+  $('tbl').innerHTML=h;
+  const e0=err(hist[0]),ek=err(hist[k]);
+  $('conv').textContent=k<2?'Exact solution: '+ex.map((v,i)=>V[i]+' = '+fr(v)).join(', ')+'.':(ek<e0?'The error is shrinking: the iterates are closing in on the exact solution.':'The error is growing: this system is diverging as written.');
+}
+$('reset').onclick=()=>load(+$('prob').value);
+$('prob').onchange=()=>load(+$('prob').value);
+$('hintb').onclick=()=>{
+  const h=$('hint');h.hidden=false;h.innerHTML='';
+  const cur=hist[k].slice();A.forEach((_,i)=>{const d=document.createElement('div');const gs=rowVal(i,cur),nv=add(mul(sub(Q(1),W),cur[i]),mul(W,gs));
+    d.innerHTML='\\('+subst(i,cur,'\\hat{'+V[i]+'}')+'\\)<br>\\('+V[i]+'=\\left(1-'+tx(W)+'\\right)\\left('+tx(cur[i])+'\\right)+'+tx(W)+'\\left('+tx(gs)+'\\right)\\)';
+    h.appendChild(d);cur[i]=nv});typeset();
+};
+$('check').onclick=()=>{
+  if(solved){k++;render();return}
+  const want=stepOnce(hist[k]);let good=0,blank=false;
+  A.forEach((_,i)=>{
+    const el=$('in'+i),raw=el.value.trim(),ans=parse(raw);
+    el.className='';
+    if(ans===null){blank=true;return}
+    const ok=same(ans,want[i])||(/[.,]/.test(raw)&&Math.abs(num(ans)-num(want[i]))<=0.00001);
+    if(ok){el.className='ok';good++}else el.className='bad';
+  });
+  const m=$('msg');
+  if(blank){m.className='msg bad';m.textContent='Enter a whole number, a fraction like 7/3, or a decimal like 2.33333 in every box.';return}
+  if(good===A.length){
+    if(wrongs===0)score++;tries++;wrongs=0;solved=true;
+    m.className='msg ok';m.textContent='Correct. Exact values: '+want.map((w,i)=>V[i]+' = '+fr(w)).join(', ')+'.';
+    $('check').textContent='Go to the next iteration';
+    $('score').textContent='Correct first try: '+score+' of '+tries;
+  }else{
+    wrongs++;m.className='msg bad';m.textContent=good+' of '+A.length+' correct. Red boxes are off: work from the top equation down: find the Gauss-Seidel value for each unknown, then blend it with its iteration '+k+' value using ω.';
+  }
+};
+$('show').onclick=()=>{
+  const want=stepOnce(hist[k]);
+  A.forEach((_,i)=>{$('in'+i).value=fr(want[i]);$('in'+i).className='ok'});
+  $('msg').className='msg';$('msg').textContent='Answer shown. Press the button to check and move on.';
+  if(wrongs===0){tries++}wrongs=1;
+};
+$('prob').innerHTML=P.map((p,i)=>'<option value="'+i+'">'+p.n+'</option>').join('');
+load(0);
+</script>
+</body>
+</html>
